@@ -12,14 +12,14 @@
     >
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
-          <v-list-tile avatar>
-            <v-list-tile-avatar>
+          <v-list-item avatar>
+            <v-list-item-avatar>
               <img src="../assets/2.jpeg">
-            </v-list-tile-avatar>
-            <v-list-tile-content>
-              <v-list-tile-title>虎哥</v-list-tile-title>
-            </v-list-tile-content>
-          </v-list-tile>
+            </v-list-item-avatar>
+            <v-list-item-content>
+              <v-list-item-title>XX商店</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
         </v-list>
       </v-toolbar>
       <v-divider/>
@@ -33,20 +33,20 @@
           no-action
         >
           <!--一级菜单 -->
-          <v-list-tile slot="activator">
-            <v-list-tile-content>
-              <v-list-tile-title>{{ item.title }}</v-list-tile-title>
-            </v-list-tile-content>
-          </v-list-tile>
+          <v-list-item slot="activator">
+            <v-list-item-content>
+              <v-list-item-title>{{ item.title }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
           <!-- 二级菜单 -->
-          <v-list-tile v-for="subItem in item.items" :key="subItem.title" :to="item.path + subItem.path">
-            <v-list-tile-content>
-              <v-list-tile-title>{{ subItem.title }}</v-list-tile-title>
-            </v-list-tile-content>
-            <v-list-tile-action>
+          <v-list-item v-for="subItem in item.items" :key="subItem.title" :to="item.path + subItem.path">
+            <v-list-item-content>
+              <v-list-item-title>{{ subItem.title }}</v-list-item-title>
+            </v-list-item-content>
+            <v-list-item-action>
               <v-icon>{{ subItem.action }}</v-icon>
-            </v-list-tile-action>
-          </v-list-tile>
+            </v-list-item-action>
+          </v-list-item>
         </v-list-group>
       </v-list>
     </v-navigation-drawer>
@@ -57,7 +57,7 @@
       :color="dark ? 'secondary' : 'primary'"
     >
       <!-- 隐藏左侧菜单的按钮-->
-      <v-toolbar-side-icon @click.stop="drawer = !drawer"/>
+<!--      <v-toolbar-side-icon @click.stop="drawer = !drawer"/>-->
       <!-- 收起左侧菜单的按钮-->
       <v-btn icon @click.stop="miniVariant = !miniVariant">
         <v-icon v-html="miniVariant ? 'chevron_right' : 'chevron_left'"/>

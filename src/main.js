@@ -11,9 +11,12 @@ import 'vuetify/dist/vuetify.min.css'
 import qs from 'qs'
 import 'element-ui/lib/theme-chalk/index.css';
 import './assets/material.css'
+import AsyncComputed from "vue-async-computed";
 
-Vue.use(Vuetify, { theme: config.theme})
+Vue.use(Vuetify, {theme: config.theme})
 Vue.use(MyComponent)
+Vue.use(AsyncComputed)
+
 Vue.prototype.$qs = qs;
 
 Vue.config.productionTip = false
@@ -22,6 +25,7 @@ Vue.config.productionTip = false
 new Vue({
   el: '#app',
   router,
-  components: { App },
+  vuetify: new Vuetify({theme: config.theme}),
+  components: {App, MyComponent},
   template: '<App/>'
 })
