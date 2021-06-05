@@ -10,13 +10,16 @@ import './http';
 import 'vuetify/dist/vuetify.min.css'
 import qs from 'qs'
 import 'element-ui/lib/theme-chalk/index.css';
+import "roboto-fontface/css/roboto/roboto-fontface.css";
+import "@mdi/font/css/materialdesignicons.css";
 import './assets/material.css'
 import AsyncComputed from "vue-async-computed";
+import _ from "lodash"
 
 Vue.use(Vuetify, {theme: config.theme})
 Vue.use(MyComponent)
 Vue.use(AsyncComputed)
-
+Vue.prototype._ = _
 Vue.prototype.$qs = qs;
 
 Vue.config.productionTip = false

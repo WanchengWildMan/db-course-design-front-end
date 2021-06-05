@@ -1,17 +1,24 @@
 <template>
   <v-card>
+    <my-date-picker
+      menu-ref-name="datePickerMenu"
+      ref="datePicker"
+      @searchCriteriaSaved="updateFilteredData"
+    >
+
+    </my-date-picker>
     <v-data-table
-      :headers="fields"
-      :item-key="itemKey"
+      :headers="headers"
       :search="search"
-      :items="tableDataProcessed"
+      :items="displayTableData"
       class="elevation-1"
     >
+
       <template v-slot:top>
         <v-toolbar
           flat
         >
-          <v-toolbar-title>{{ TITLE }}</v-toolbar-title>
+          <v-toolbar-title>{{ title }}</v-toolbar-title>
           <v-divider
             class="mx-4"
             inset
@@ -48,7 +55,8 @@
               <v-card-text>
                 <v-container>
                   <v-row>
-                    <v-col :cols="col.cols?col.cols:6" v-for="col in fields" v-if="col.readonly!=true"
+                    <v-col :cols="col.cols?col.cols:6" v-for="col in fields"
+                           v-if="col.readonly!=true&&col.autoAdd!=true"
                            v-bind:key="col.value">
                       <v-text-field
                         v-if="!col.select"
@@ -70,32 +78,32 @@
                   text
                   @click="close"
                 >
-                  Cancel
+                  取消
                 </v-btn>
                 <v-btn
                   color="blue darken-1"
                   text
                   @click="save"
                 >
-                  Save
+                  保存
                 </v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
-              <v-card-title class="text-h5">Are you sure you want to delete this item?</v-card-title>
+              <v-card-title class="text-h5">确认删除？</v-card-title>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeDelete">Cancel</v-btn>
-                <v-btn color="blue darken-1" text @click="deleteItemConfirm">OK</v-btn>
+                <v-btn color="blue darken-1" text @click="closeDelete">取消</v-btn>
+                <v-btn color="blue darken-1" text @click="deleteItemConfirm">确认</v-btn>
                 <v-spacer></v-spacer>
               </v-card-actions>
             </v-card>
           </v-dialog>
         </v-toolbar>
       </template>
-      <template v-slot:item.actions="{ item }">
+      <template v-if="actions" v-slot:[`item.actions`]="{ item }">
         <v-icon
           v-if="actions.includes('edit')"
           small
@@ -115,7 +123,7 @@
       <template v-slot:no-data>
         <v-btn
           color="primary"
-          @click="initialize"
+          @click="initialize()"
         >
           Reset
         </v-btn>
@@ -123,132 +131,68 @@
     </v-data-table>
   </v-card>
 </template>
+
+
 <script>
+import MyDatePicker from "./MyDatePicker";
+
 export default {
-  name: "DataTable",
+  name: "MyDataTable",
+  components: {MyDatePicker},
   props: {
     title: String,
-    headers: Array,
-    selectFields: Object,
+    fields: Array,
     defaultItem: Object,
-    actions: Array
+    dataURL: String,
+    actions: Array,
+    tableData: Array,
+    key1: String,
+    key2: String,
+    dateCol: String,
   },
   data: () => ({
     dialog: false,
     dialogDelete: false,
     search: "",
-    fields: [
-      {
-        text: '商品条形码',
-        align: 'start',
-        value: 'barcode',
-        autoAdd: true,
-        cols: 6
-      },
-      {text: '商品名称', value: 'name', cols: 6},
-      {
-        text: '商品种类',
-        value: 'category.name',
-        cols: 3,
-        select: true,
-        selectItemsURL: "/commodity/findCategoryByPage",
-        selectItemLabel: "name",
-        selectItemValue: "categoryId"
-      },
-      {text: '规格型号', value: 'format', cols: 3},
-      {
-        text: '单位',
-        value: 'unit.unitName',
-        select: true,
-        selectItemsURL: "/commodity/findUnitByPage",
-        selectItemLabel: "unitName",
-        selectItemValue: "unitId"
-      },
-      {text: '售价', value: 'costPrice'},
-      {text: '折扣率', value: 'discountRate'},
-      {text: '库存下限', value: 'quantityUpperLimit', nullDisplay: "无"},
-      {text: '库存上限', value: 'quantityLowerLimit', nullDisplay: "无"},
-      {
-        text: '供应商',
-        value: 'provide.name',
-        select: true,
-        selectItemsURL: "/provide/findProvideByPage",
-        selectItemLabel: "name",
-        selectItemValue: "provideId"
-      },
-      {text: '创建日期', value: 'createDate', autoAdd: true},
-      {text: '修改日期', value: 'updateDate', autoAdd: true},
-      {text: '备注', value: 'remark'},
-
-
-    ],
     editedIndex: -1,
     editedItem: {},
-    defaultItem: {
-      commodityId: "",
-      name: '',
-      barcode: '',
-      category: {name: ''},
-      format: '',
-      unit: {unitName: ''},
-      costPrice: 0,
-      discountRate: 1,
-      quantityUpperLimit: null,
-      quantityLowerLimit: 0,
-      provide: {name: ''},
-      createDate: Date.now(),
-      updateDate: Date.now(),
-      remark: '',
-    },
-    async getSelectItemsByURL(url = undefined) {
-      if (!url) return [];
-      return
-      return await this.$http.request({
-        url: url,
-        method: 'get',
-      }).then(res => res.data.result);
-    },
+    headers: [],
+    tableDataFiltered: [],
   }),
 
   computed: {
+
     formTitle() {
-      return this.editedIndex === -1 ? '新商品' : '编辑商品';
+      return this.editedIndex === -1 ? '新建条目' : '编辑条目';
     },
 
-    tableDataProcessed() {
-      console.log(this.tableData)
-      return this.tableData;
-      console.log(this.tableData.map(el => {
-        let e = el;
-        e.quantityLowerLimit = e.quantityLowerLimit == 0 ? '无' : e.quantityLowerLimit;
-        e.quantityUpperLimit = e.quantityUpperLimit ? e.quantityUpperLimit : '无';
-        return e;
-      }).filter(e => {
-        e.Status != -1;
-      }))
-      return this.tableData.map(el => {
-        let e = el;
-        e.quantityLowerLimit = e.quantityLowerLimit == 0 ? '无' : e.quantityLowerLimit;
-        e.quantityUpperLimit = e.quantityUpperLimit ? e.quantityUpperLimit : '无';
-        return e;
-      }).filter(e => {
-        e.Status != -1;
+    displayTableData() {
+      return this.tableDataFiltered.map(e => {
+        let el = {};
+        Object.assign(el, e);
+        for (let h of this.fields) {
+          if (h.displayVal) {
+            let path = h.value;
+
+            // let o=path.split(".");
+            // let l=o.length;
+            // let obj=o.splice(l-1,1);
+            // console.log(el,path)
+            console.log(el, "1")
+            let originVal = _.get(el, path);
+            console.log(originVal)
+            // console.log(eval(path),h.displayVal[originVal])
+            let mappedVal = h.displayVal[originVal];
+            console.log(mappedVal)
+            // Object.assign(eval(path), mappedVal);
+            _.set(el, path, mappedVal);
+            console.log(el, "2")
+          }
+          // el.Status=el.Status=1?"正常":"删除"
+        }
+        return el;
       })
     },
-    categoryNames() {
-      catego
-      return this.categorysAll.map(el => el.name);
-    }
-  },
-  asyncComputed: {
-    categorysAll() {
-      return this.$http.request({
-        url: "/commodity/findCategoryByPage",
-        method: 'get',
-        params: {findInfo: {}}
-      }).then(res => res.data.result);
-    },
-
   },
   watch: {
     dialog(val) {
@@ -257,10 +201,18 @@ export default {
     dialogDelete(val) {
       val || this.closeDelete();
     },
+    searchCriteria(val) {
+      if (!val) return;
+      for (let field of this.fields) {
+        if (field.fil)
+          this.tableDataFiltered = this.tableData.filter()
+      }
+    }
   },
 
   created() {
     this.initialize();
+    this.key1 = this.key1 ? this.key1 : "id"
   },
   mounted() {
     this.mountSelectItems();
@@ -269,207 +221,35 @@ export default {
     hasError(res) {
       return res.data.errors && res.data.errors.length > 0;
     },
-    initialize() {
-      let self = this;
-      this.$http.request({
-        method: 'GET',
-        url: '/commodity/findCommodityByPage',
-        params: {},
-
-      }).then(res => {
-        if (this.hasError(res)) {
-          this.$message.error('数据获取失败！请检查网络状态！');
+    updateFilteredData(dateRange) {
+      let dateRangeFilter = (el) => {
+        if (dateRange[0] <= el[this.dateCol] && el[this.dateCol] <= dateRange[1]) {
+          return true;
         }
-        self.tableData = res.data.result;
-      });
-
-    },
-    mountSelectItems() {
-      let self = this;
-      for (let i in this.fields) {
-        if (this.fields[i].select) {
-          this.$http.request({
-            url: self.fields[i].selectItemsURL,
-            method: "get"
-          }).then(res => {
-            self.fields[i].selectItems = res.data.result;
-          }).catch(err => {
-            this.$message.error("选项数据获取失败！")
-          })
-          console.log(i)
-        }
-
+        return false;
       }
-      console.log(this.fields)
+      this.tableDataFiltered = this.tableData.filter(dateRangeFilter);
     },
-    editItem(item) {
-      this.editedIndex = this.tableData.indexOf(item);
-      this.editedItem = Object.assign({}, item);
-      this.dialog = true;
-    },
-
-    deleteItem(item) {
-      this.editedIndex = this.tableData.indexOf(item);
-      this.editedItem = Object.assign({}, item);
-      this.dialogDelete = true;
-    },
-
-    deleteItemConfirm() {
-      this.$http.request({
-        method: 'delete',
-        url: '/comodity/deleteCommodityById',
-        params: {commodityId: this.editedItem.commodityId},
-      }).then(res => {
-        if (this.hasError(res)) {
-          this.$message.error('删除失败！该商品不存在或无法删除！');
-        } else {
-          this.$message.success('删除成功！');
-        }
-      });
-      this.$emit("itemDeleted", Object.assign({}, this.tableData[this.editedIndex]));
-      this.tableData.splice(this.editedIndex, 1);
-      this.closeDelete();
-    },
-
-    close() {
-      this.dialog = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
-
-    closeDelete() {
-      this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
-
-    save() {
-      if (this.editedIndex > -1) {
-        Object.assign(this.tableData[this.editedIndex], this.editedItem);
-      } else {
-        this.$emit("itemSaved", this.editedItem)
-        this.$nextTick(() => {
-          if (this.editedItem != undefined) {
-            this.tableData.push(this.editedItem);
-          }
+    initialize() {
+      this.headers = []
+      Object.assign(this.headers, this.fields);
+      if (this.actions != null) {
+        this.headers.push({
+          text: "操作",
+          value: "actions",
+          sortable: false,
+          align: "start",
         });
       }
-      this.close();
-    },
-  },
-};
-</script>
-
-
-<script>
-export default {
-  name: "DataTable",
-  props: {
-    title: String,
-    headers: Array,
-    selectFields: Object,
-    defaultItem: Object,
-    actions: Array
-  },
-  data: () => ({
-    TITLE: '商品管理',
-    dialog: false,
-    dialogDelete: false,
-    search: "",
-    tableData: [],
-    editedIndex: -1,
-    editedItem: {},
-    async getSelectItemsByURL(url = undefined) {
-      if (!url) return [];
-      return
-      return await this.$http.request({
-        url: url,
-        method: 'get',
-      }).then(res => res.data.result);
-    },
-  }),
-
-  computed: {
-    formTitle() {
-      return this.editedIndex === -1 ? '新商品' : '编辑商品';
-    },
-
-    tableDataProcessed() {
-      console.log(this.tableData)
-      console.log(this.tableData.map(el => {
-        let e = el;
-        e.quantityLowerLimit = e.quantityLowerLimit == 0 ? '无' : e.quantityLowerLimit;
-        e.quantityUpperLimit = e.quantityUpperLimit ? e.quantityUpperLimit : '无';
-        return e;
-      }).filter(e => {
-        e.Status != -1;
-      }))
-      return this.tableData.map(el => {
-        let e = el;
-        e.quantityLowerLimit = e.quantityLowerLimit == 0 ? '无' : e.quantityLowerLimit;
-        e.quantityUpperLimit = e.quantityUpperLimit ? e.quantityUpperLimit : '无';
-        return e;
-      }).filter(e => {
-        e.Status != -1;
-      })
-    },
-    categoryNames() {
-      catego
-      return this.categorysAll.map(el => el.name);
-    }
-  },
-  asyncComputed: {
-    categorysAll() {
-      return this.$http.request({
-        url: "/commodity/findCategoryByPage",
-        method: 'get',
-        params: {findInfo: {}}
-      }).then(res => res.data.result);
-    },
-
-  },
-  watch: {
-    dialog(val) {
-      val || this.close();
-    },
-    dialogDelete(val) {
-      val || this.closeDelete();
-    },
-  },
-
-  created() {
-    this.initialize();
-  },
-  mounted() {
-    this.mountSelectItems();
-  },
-  methods: {
-    hasError(res) {
-      return res.data.errors && res.data.errors.length > 0;
-    },
-    initialize() {
-      let self = this;
-      this.$http.request({
-        method: 'GET',
-        url: '/commodity/findCommodityByPage',
-        params: {},
-
-      }).then(res => {
-        if (this.hasError(res)) {
-          this.$message.error('数据获取失败！请检查网络状态！');
-        }
-        self.tableData = res.data.result;
-      });
-
+      console.log(this.actions)
+      this.editedItem = Object.assign({}, this.defaultItem);
+      //刷新子组件
+      this.$refs.datePicker.initialize();
     },
     mountSelectItems() {
       let self = this;
       for (let i in this.fields) {
-        if (this.fields[i].select) {
+        if (this.fields[i].select && !this.fields[i].selectItems) {
           this.$http.request({
             url: self.fields[i].selectItemsURL,
             method: "get"
@@ -478,47 +258,50 @@ export default {
           }).catch(err => {
             this.$message.error("选项数据获取失败！")
           })
-          console.log(i)
         }
 
       }
       console.log(this.fields)
     },
     editItem(item) {
-      this.editedIndex = this.tableData.indexOf(item);
-      this.editedItem = Object.assign({}, item);
+      let criteria = {};
+      criteria[this.key1] = item[this.key1];
+      if (this.key2) criteria[this.key2] = item[this.key2];
+      this.editedIndex = this.tableData.findIndex(e => {
+        return e[this.key1] == criteria[this.key1] && (!this.key2 || e[this.key2] == criteria[this.key2])
+      });
+      this.editedItem = Object.assign({}, this.tableData[this.editedIndex]);
       this.dialog = true;
+      console.log("first", this.editedItem)
     },
 
     deleteItem(item) {
-      this.editedIndex = this.tableData.indexOf(item);
-      this.editedItem = Object.assign({}, item);
+      let criteria = {};
+      criteria[this.key1] = item[this.key1];
+      if (this.key2) criteria[this.key2] = item[this.key2];
+      this.editedIndex = this.tableData.findIndex(e => {
+        return e[this.key1] == criteria[this.key1] && (!this.key2 || e[this.key2] == criteria[this.key2])
+      });
+      this.editedItem = Object.assign({}, this.tableData[this.editedIndex]);
       this.dialogDelete = true;
     },
 
     deleteItemConfirm() {
-      this.$http.request({
-        method: 'delete',
-        url: '/comodity/deleteCommodityById',
-        params: {commodityId: this.editedItem.commodityId},
-      }).then(res => {
-        if (this.hasError(res)) {
-          this.$message.error('删除失败！该商品不存在或无法删除！');
-        } else {
-          this.$message.success('删除成功！');
-        }
-      });
+      // console.log(this.tableData[this.editedIndex],this.editedIndex.toString())
       this.$emit("itemDeleted", Object.assign({}, this.tableData[this.editedIndex]));
       this.tableData.splice(this.editedIndex, 1);
       this.closeDelete();
     },
 
     close() {
+      // console.log(this.defaultItem)
       this.dialog = false;
       this.$nextTick(() => {
         this.editedItem = Object.assign({}, this.defaultItem);
         this.editedIndex = -1;
       });
+      // console.log(this.defaultItem)
+
     },
 
     closeDelete() {
@@ -530,10 +313,13 @@ export default {
     },
 
     save() {
+      console.log(this.editedItem)
+      console.log(this)
+      this.$emit("itemSaved", this.editedItem)
       if (this.editedIndex > -1) {
         Object.assign(this.tableData[this.editedIndex], this.editedItem);
       } else {
-        this.$emit("itemSaved", this.editedItem)
+        console.log(this.editedItem)
         this.$nextTick(() => {
           if (this.editedItem != undefined) {
             this.tableData.push(this.editedItem);
