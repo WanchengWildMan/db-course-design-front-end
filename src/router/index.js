@@ -30,7 +30,14 @@ export default new Router({
         route("/item/specification", '/item/specification/Specification', "Specification"),
         route("/user/statistics", '/item/Statistics', "Statistics"),
         route("/trade/promotion", '/trade/Promotion', "Promotion"),
-        route("/commodity",'/commodity/Commodity',"Commodity")
+        route("/commodity",'/commodity/Commodity',"Commodity"),
+        route("/commodity/category",'/commodity/Category',"Category"),
+        route("/commodity/unit",'/commodity/Unit',"Unit"),
+        route("/trade/billInfo",'/bill/Bill',"Bill"),
+        route("/commodity/inventory",'/commodity/Inventory',"Inventory"),
+        route("/trade/purchase",'/purchase/Purchase',"Purchase"),
+
+
       ]
     },
 

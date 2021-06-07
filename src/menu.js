@@ -21,8 +21,11 @@ var menus = [
     title: "商品管理",
     path: "/commodity",
     items: [
+      {title: "总览", path: "/"},
       {title: "分类管理", path: "/category"},
-      {title: "总览", path: "/"}
+      {title: "商品单位管理", path: "/unit"},
+      {title:"库存管理",path: "/inventory"}
+
     ]
   },
   {
@@ -36,13 +39,23 @@ var menus = [
   },
   {
     action: "attach_money",
-    title: "销售管理",
-    path: "/trade",
+    title: "销售管理2",
+    path: "/trade2",
     items: [
       {title: "交易统计", path: "/statistics"},
       {title: "订单管理", path: "/order"},
       {title: "物流管理", path: "/logistics"},
       {title: "促销管理", path: "/promotion"}
+    ]
+  },
+  {
+    action: "attach_money",
+    title: "销售管理",
+    path: "/trade",
+    items: [
+      {title: "收银单管理", path: "/billInfo"},
+      {title: "进货单管理", path: "/purchase"},///!!!
+      {title: "促销管理", path: "/promotion"},
     ]
   },
   {

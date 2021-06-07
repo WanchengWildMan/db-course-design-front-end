@@ -9,14 +9,14 @@
         :ref="menuRefName"
         v-model="menu"
         :close-on-content-click="false"
-        :return-value.sync="dateRange"
+        :return-value.sync="dateRangeStr"
         transition="scale-transition"
         offset-y
         min-width="auto"
       >
         <template v-slot:activator="{ on, attrs }">
           <v-text-field
-            v-model="dateRange.join('~')"
+            v-model="dateRangeStr.map(e=>new Date(e).toISOString().substr(0,10)).join('~')"
             label="时间范围"
             prepend-icon="mdi-calendar"
             readonly
@@ -26,7 +26,7 @@
         </template>
         <v-date-picker
           range
-          v-model="dateRange"
+          v-model="dateRangeStr"
           no-title
           scrollable
         >
@@ -57,33 +57,34 @@ export default {
   props: {menuRefName: String},
   data: () => ({
     today: "",
-    dateRange: [new Date(), new Date()],
+    dateRangeStr: [new Date(), new Date()],
     menu: false,
   }),
   created() {
     this.initialize()
   },
-  mounted() {
-    console.log("searchCriteriaSaved")
-    this.$emit("searchCriteriaSaved", Object.assign([], this.dateRange));
-  },
   methods: {
     initialize() {
-      this.today = new Date().toISOString().substr(0, 10);
-      this.dateRange[0].setDate(this.dateRange[0].getDate() - 1);
-      this.dateRange[0] = new Date(this.dateRange[0]).toISOString().substr(0, 10);
-      this.dateRange[1] = this.today;
+      this.today = new Date();
+      this.dateRangeStr[0].setDate(this.dateRangeStr[0].getDate() - 30);
+      this.dateRangeStr[0] = new Date(this.dateRangeStr[0]).toISOString();
+      this.dateRangeStr[1] = this.today;
+      this.dateRangeStr[1].setDate(this.dateRangeStr[1].getDate() +1);
+      this.dateRangeStr[1].setHours(24);
+      this.dateRangeStr[1]=this.dateRangeStr[1].toISOString();
     },
     close() {
       this.menu = false;
     },
     save() {
-      this.$refs[this.menuRefName].save(this.dateRange)
-      console.log("searchCriteriaSaved")
-      console.log(this)
-      // this.dateRange=dr;
-      this.$emit("searchCriteriaSaved", Object.assign([], this.dateRange));
+      this.$refs[this.menuRefName].save(this.dateRangeStr.sort())
+      // this.dateRangeStr=dr;
       this.close();
+    }
+  },
+  computed:{
+    dateRange(){
+      return this.dateRangeStr.map(e=>{let el=e;return new Date(el)});
     }
   }
 

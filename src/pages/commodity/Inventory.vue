@@ -53,21 +53,17 @@
             <v-card-text>
               <v-container>
                 <v-row>
-                  <v-col :cols="col.cols?col.cols:6" v-for="(col,i) in fields"
+                  <v-col :cols="col.cols?col.cols:6" v-for="col in fields"
                          v-if="col.readonly!=true&&col.autoAdd!=true"
                          v-bind:key="col.value">
                     <v-text-field
                       v-if="!col.select"
-                      v-model="col.value.includes('.')?editedItem[col.value.split('.')[0]][col.value.split('.')[1]]:editedItem[col.value]"
+                      v-model="editedItem[col.value]"
                       :label="col.text"
                       :counter-value="col.length"
                       :rules="col.rules"
-                    >
-
-                    </v-text-field>
-                    <v-select v-else
-                              v-model="editedItem[col.selectItemValue]"
-                              :items="col.selectItems"
+                    ></v-text-field>
+                    <v-select v-else :items="col.selectItems"
                               :item-text="col.selectItemLabel?col.selectItemLabel:'name'"
                               :item-value="col.selectItemValue?col.selectItemValue:'id'"
                               :label="col.text"
@@ -119,6 +115,17 @@
         v-on="on"
       ></v-simple-checkbox>
     </template>
+    <template v-slot:item.quantityUpperLimit="{item}">
+      {{ !item.quantityUpperLimit ? "无" : item.quantityUpperLimit }}
+    </template>
+    <template v-slot:item.inventoryInfo.quantityUpperLimit="{item}">
+      {{ !item.inventoryInfo.quantityUpperLimit ? "无" : item.inventoryInfo.quantityUpperLimit }}
+    </template>
+    <template v-slot:item.Status="{item}">
+      <v-chip :color="getStatusColor(item.inventoryNum,item.quantityLowerLimit,item.quantityUpperLimit)">
+        {{ item.Status }}
+      </v-chip>
+    </template>
     <template v-if="actions" v-slot:[`item.actions`]="{ item }">
       <v-icon
         v-if="actions.includes('edit')"
@@ -129,7 +136,7 @@
         mdi-pencil
       </v-icon>
       <v-icon
-        v-if="actions.includes('delete') != undefined"
+        v-if="actions.includes('delete')"
         small
         @click="deleteItem(item)"
       >
@@ -159,42 +166,92 @@
 
 
 <script>
-import MyDatePicker from "./MyDatePicker";
+import MyDatePicker from "@/components/MyDatePicker";
 
 export default {
   name: "MyDataTable",
   components: {MyDatePicker},
   props: {
     title: String,
-    fields: Array,
     defaultItem: Object,
     dataURL: String,
-    actions: Array,
-    tableData: Array,
-    key1: String,
+
     key2: String,
-    dateCol: String,
     showSelect: Object,
-    readonly: Boolean
+
   },
   data: () => ({
     dialog: false,
     dialogDelete: false,
     search: "",
+    readonly: true,
+    key1: "commodityId",
+    dateCol: "inventoryTime",//!!!
     isreadonly: false,
     selectEnabled: false,
     editedIndex: -1,
     editedItem: {},
-    editedItemPrefix: "editedItem.",
     headers: [],
+    actions: ['edit'],
+    tableData: [],
+    fields: [//!!!
+      {
+        text: "商品名称",
+        value: "commodity.name",
+        readonly: true
+      },
+      {
+        text: "商品编号",
+        value: "commodityId",
+        readonly: true
+      },
+      {
+        text: "库存数量",
+        value: "inventoryNum",
+      },
+      {
+        text: "商品类别",
+        value: "category.name",
+        readonly: true
+      },
+      {
+        text: "入库时间",
+        value: "inventoryTime",
+        readonly: true
+      },
+      {
+        text: "库存上限",
+        value: "quantityUpperLimit",
+        readonly: true
+      },
+      {
+        text: "库存下限",
+        value: "quantityLowerLimit",
+        readonly: true
+      },
+      {
+        text: "入库时间",
+        value: "inventoryTime",
+        readonly: true
+      },
+      {
+
+        text: "状态",
+        value: "Status",
+        groupable: false,
+        readonly: true
+
+      }
+    ],
   }),
 
   computed: {
+
     formTitle() {
       return this.editedIndex === -1 ? '新建条目' : '编辑条目';
     },
     tableDataFiltered() {
-      console.log(this.tableData, "preFilter")
+
       let self = this;
       let dateRangeFilter = (el) => {
         try {
@@ -202,7 +259,7 @@ export default {
           let d = new Date(el[this.dateCol]);
           //!!!
           if (!dateRange || dateRange.length < 2) dateRange = [0, Date.now()];
-          // console.log(dateRange, el[this.dateCol], typeof el[col])
+          // console.log(dateRange,el[this.dateCol])
           if (dateRange[0] <= d && d <= dateRange[1]) {
             return true;
           }
@@ -213,11 +270,7 @@ export default {
         }
       }
       return this.tableData.filter(dateRangeFilter).map(el => {
-        // console.log(el[this.dateCol])
-
-        // console.log(new Date(el[this.dateCol]).toLocaleDateString());
         el[this.dateCol] = new Date(el[this.dateCol]).format("yyyy-MM-dd hh:mm:ss");
-        // console.log(el[this.dateCol])
         return el
       });
     },
@@ -227,6 +280,7 @@ export default {
         let el = {};
         Object.assign(el, {});
         console.log(el, e)
+        e.Status = this.getStatusName(e.inventoryNum, e.quantityLowerLimit, e.quantityUpperLimit)
         Object.assign(el, e);
         for (let h of this.fields) {
           if (h.displayVal) {
@@ -236,7 +290,7 @@ export default {
             // let l=o.length;
             // let obj=o.splice(l-1,1);
             // console.log(el,path)
-//TODO lodash的原理
+            //TODO lodash的原理
             let originVal = _.get(e, path);///？？？？
             // let originVal = _.get(this.tableDataFiltered[i].path)
             console.log(path, originVal, "origin")
@@ -244,7 +298,7 @@ export default {
             let mappedVal = h.displayVal[originVal];
             console.log(mappedVal)
             // Object.assign(eval(path), mappedVal);
-            if (mappedVal) _.set(el, path, mappedVal);
+            _.set(el, path, mappedVal);
 
           }
           // el.Status=el.Status=1?"正常":"删除"
@@ -252,6 +306,8 @@ export default {
         return el;
       })
     },
+
+
   },
   watch: {
     dialog(val) {
@@ -271,13 +327,6 @@ export default {
 
   created() {
     this.initialize();
-    for (let i in this.fields) {
-      let field = this.fields[i];
-      if (!field.groupable) this.fields[i].groupable = false;
-      if (field.value.toLowerCase().includes("time") || field.value.toLowerCase().includes("date")) {
-        this.dateColArr.push(field.value);
-      }
-    }
     this.key1 = this.key1 ? this.key1 : "id"
     if (this.readonly) this.isreadonly = true
   },
@@ -292,7 +341,7 @@ export default {
     initialize() {
       this.headers = []
       Object.assign(this.headers, this.fields);
-      if (this.actions != null) {
+      if (this.actions && this.actions.length > 0) {
         this.headers.push({
           text: "操作",
           value: "actions",
@@ -302,7 +351,22 @@ export default {
       }
       console.log(this.actions)
       this.editedItem = Object.assign({}, this.defaultItem);
-
+      let self = this;
+      this.$http.request({
+        method: 'GET',
+        url: '/inventory/findInventoryByPage',
+        params: {notGroup: true},
+      }).then(async res => {
+          if (this.hasError(res)) {
+            this.$message.error('数据获取失败！请检查网络状态！');
+            return;//!!!
+          }
+          self.tableData = res.data.result;
+        }
+      ).catch(e => {
+        console.log(e);
+        this.$message.error('数据获取失败！请检查网络状态！');
+      });
     },
     mountSelectItems() {
       let self = this;
@@ -346,16 +410,31 @@ export default {
 
     deleteItemConfirm() {
       // console.log(this.tableData[this.editedIndex],this.editedIndex.toString())
-      this.$emit("itemDeleted", Object.assign({}, this.tableData[this.editedIndex]));
+      // this.$emit("itemDeleted", Object.assign({}, this.tableData[this.editedIndex]));
+      this.afterDeleteItemConfirm(Object.assign({}, this.tableData[this.editedIndex]));
       this.tableData.splice(this.editedIndex, 1);
       this.closeDelete();
     },
+    afterDeleteItemConfirm(item) {//!!!
+      // console.log(item)
+      //!!!不能删除
+      // this.$http.request({
+      //   method: 'delete',
 
+      //   params: {billId: item.billId},
+      // }).then(res => {
+      //   if (this.hasError(res)) {
+      //     this.$message.error('删除失败！该库存不存在或无法删除！');
+      //   } else {
+      //     this.$message.success('删除成功！');
+      //   }
+      // });
+    },
     close() {
       console.log(this.editedItem)
       this.dialog = false;
       this.$nextTick(() => {
-        // this.editedItem = Object.assign({}, this.defaultItem);
+        //!!! this.editedItem = Object.assign({}, this.defaultItem);
         this.editedIndex = -1;
       });
       // console.log(this.defaultItem)
@@ -370,15 +449,13 @@ export default {
       });
     },
 
-    save(isAdd) {
+    save() {
       console.log(this.editedItem)
       console.log(this)
-      this.$emit("itemSaved", this.editedItem)
+      this.saveItem(this.editedItem)
       if (this.editedIndex > -1) {
         Object.assign(this.tableData[this.editedIndex], this.editedItem);
       } else {
-        this.editedItem[this.key1] = undefined;
-        if (this.key2) this.editedItem[this.key2] = undefined;
         console.log(this.editedItem)
         this.$nextTick(() => {
           if (this.editedItem != undefined) {
@@ -388,8 +465,54 @@ export default {
       }
       this.close();
     },
-    pak(path) {
-      return "editedItem." + path;
+    async saveItem(item) {
+      try {
+        //TODO item剔除部分字段
+        const updateFields=['commodityId',"inventoryNum"];
+        for (let k of Object.keys(item)) {
+          if (!updateFields.includes(k)) {
+            item[k] = undefined;
+          }
+        }
+
+        let res = await this.$http.post("/admin/forceUpdateInventory", {inventoryInfo: item});//!!!
+        if (this.hasError(res)) {
+          this.$message.error("库存保存失败！");
+        } else {
+          if (!item.commodityId) {
+            item.commodityId = res.data.result.commodityId;
+            this.$message.success("库存添加成功！");
+          } else {
+            this.$message.success("库存保存成功！");
+            this.initialize();
+          }
+        }
+      } catch (e) {
+        console.log(e);
+        this.$message.error("库存保存失败！请检查网络连接");
+
+      }
+    },
+    getStatusColor(nowNum, lowLim, upLim) {
+      if (!lowLim) lowLim = 0;
+      let upLim0 = upLim;
+      if (!upLim) upLim = 10000000;
+
+      if (nowNum < lowLim) return "orange";
+      else if (upLim0 && nowNum - lowLim < 0.1 * (upLim - lowLim)) return "gray";
+      //大于90%则接近上限，小于0.1售空
+      else if (upLim - nowNum < 0.1 * upLim) return "red";
+      else return "green";
+    },
+    getStatusName(nowNum, lowLim, upLim) {
+      if (!lowLim) lowLim = 0;
+      let upLim0 = upLim;
+      if (!upLim) upLim = 10000000
+      if (nowNum < lowLim * 1.1) return "将要售空";
+      else if (upLim0 && nowNum - lowLim < 0.1 * (upLim - lowLim)) return "缺货";
+      //大于90%则接近上限，小于0.1售空
+      else if (upLim - nowNum < 0.1 * upLim) return "接近爆仓";
+      else return "正常";
     }
   },
 };
