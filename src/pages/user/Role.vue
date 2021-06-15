@@ -1,13 +1,5 @@
 <template>
   <v-container>
-    <v-flex xs3>
-      状态：
-      <v-btn-toggle mandatory v-model.lazy="showDeleted">
-        <v-btn flat :value="2"> 全部 </v-btn>
-        <v-btn flat :value="0"> 上架 </v-btn>
-        <v-btn flat :value="1"> 下架 </v-btn>
-      </v-btn-toggle>
-    </v-flex>
     <v-data-table
       ref="myDataTable"
       :headers="headers"
@@ -21,20 +13,6 @@
         <v-toolbar flat>
           <v-toolbar-title>{{ title }}</v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
-          <v-spacer></v-spacer>
-          <v-text-field
-            hide-details
-            v-model="filterInfo.morethan"
-            label="库存大于"
-          >
-          </v-text-field>
-          <v-spacer></v-spacer>
-          <v-text-field
-            hide-details
-            v-model="filterInfo.lessthan"
-            label="库存小于"
-          >
-          </v-text-field>
           <v-spacer></v-spacer>
           <v-text-field
             v-model="search"
@@ -56,7 +34,6 @@
                 添加
               </v-btn>
             </template>
-
             <v-card>
               <v-card-title>
                 <span class="text-h5">{{ formTitle }}</span>
@@ -73,7 +50,6 @@
                     >
                       <v-text-field
                         v-if="!col.select"
-                        :counter="col.counterValue"
                         v-model="
                           col.value.includes('.')
                             ? editedItem[col.value.split('.')[0]][
@@ -98,6 +74,12 @@
                         "
                         :label="`${col.text}(${col.value})`"
                       ></v-select>
+                    </v-col>
+                    <v-col :cols="6">
+                      <v-text-field
+                        v-model="editedItem.roleName"
+                        label="`权限名(Role Name)`"
+                      ></v-text-field>
                     </v-col>
                   </v-row>
                 </v-container>
@@ -137,25 +119,10 @@
           v-on="on"
         ></v-simple-checkbox>
       </template>
+
       <template v-slot:item.Status="{ item }">
-        <v-chip
-          :color="
-            getStatusColor(
-              item.inventoryInfo.inventoryNum,
-              item.inventoryInfo.quantityLowerLimit,
-              item.inventoryInfo.quantityUpperLimit,
-              item.Status
-            )
-          "
-        >
-          {{
-            getStatusName(
-              item.inventoryInfo.inventoryNum,
-              item.inventoryInfo.quantityLowerLimit,
-              item.inventoryInfo.quantityUpperLimit,
-              item.Status
-            )
-          }}
+        <v-chip :color="getStatusColor(item.Status)">
+          {{ getStatusName(item.Status) }}
         </v-chip>
       </template>
       <template v-if="actions" v-slot:[`item.actions`]="{ item }">
@@ -195,106 +162,72 @@ import MyDataTable from "@/components/DataTable.vue";
 import MyDatePicker from "@/components/MyDatePicker";
 
 export default {
-  name: "Commodity",
+  name: "Role",
   components: { MyDatePicker },
   data: () => ({
-    title: "商品管理",
+    ROLE_LEVEL: 5,
+    title: "权限管理",
     dialog: false,
     dialogDelete: false,
-    showDeleted: 0,
+    showDeleted: 2,
     selectEnabled: false,
     showAll: true,
-    key1: "commodityId",
+    key1: "roleId",
     isreadonly: false,
     search: "",
     actions: ["addInto", "remove", "edit"],
     filterBy: 0,
-    filterInfo: {
-      morethan: 0,
-      lessthan: 10000000,
-    },
     dateColArr: [],
     headers: [], //!!!
     fields: [
       {
-        text: "商品条形码",
-        align: "start",
-        value: "barcode",
-        cols: 6,
-        counterValue: 13,
-        rules: [
-          (v) => !!v || "必须填写商品条形码!",
-          (v) => (v && v.length === 13) || "长度必须为13！",
-          (v) => (v && v.length === 13 && /^6[0-9]{12}$/.test(v)) || "格式错误",
-        ],
-      },
-      {
-        text: "商品名称",
-        value: "name",
-        cols: 6,
-        rules: [(v) => !!v || "必须填写商品名称!"],
-      },
-      {
-        text: "商品编号",
-        value: "commodityId",
+        text: "权限编号",
+        value: "roleId",
         readonly: true,
       },
       {
-        text: "商品种类",
-        value: "category.name",
+        text: "权限等级",
         cols: 3,
-        select: true,
-        selectItemsURL: "/commodity/findCategoryByPage",
-        selectItemLabel: "name",
-        selectItemValue: "categoryId",
+        value: "roleLevel",
+        ajax: true,
       },
-      { text: "规格型号", value: "format", cols: 3 },
       {
-        text: "单位",
-        value: "unit.unitName",
-        select: true,
-        selectItemsURL: "/commodity/findUnitByPage",
-        selectItemLabel: "unitName",
-        selectItemValue: "unitId",
-      },
-      { text: "售价", value: "costPrice" },
-      {
-        text: "折扣率",
-        value: "discountRate",
-        rules: [(v) => !v || (v > 0 && v <= 1.0) || "折扣率必在0～1.0之间"],
-      },
-      { text: "库存量", value: "inventoryInfo.inventoryNum", readonly: true },
-      {
-        text: "库存下限",
-        value: "inventoryInfo.quantityLowerLimit",
+        text: "权限名",
+        value: "roleName",
         readonly: true,
+        ajax: true,
       },
       {
-        text: "库存上限",
-        value: "inventoryInfo.quantityUpperLimit",
-        readonly: true,
-      },
-      {
-        text: "供应商",
-        value: "provide.name",
+        text: "修改",
+        value: "edit",
         select: true,
-        selectItemsURL: "/provide/findProvideByPage",
-        selectItemLabel: "name",
-        selectItemValue: "provideId",
-      },
-      {
-        text: "状态",
-        value: "Status",
-        select: true,
-        selectItemLabel: "name",
-        selectItemValue: "Status",
+        selectItemsValue: "edit",
+        selectItemsLabel: "name",
         selectItems: [
-          { Status: -1, name: "已删除" },
-          { Status: 1, name: "正常" },
+          { name: "有", edit: 1 },
+          { name: "无", edit: 0 },
         ],
       },
-      { text: "创建日期", value: "createDate", autoAdd: true },
-      { text: "修改日期", value: "updateDate", autoAdd: true },
+      {
+        text: "删除",
+        value: "remove",
+        select: true,
+        selectItemsValue: "remove",
+        selectItemsLabel: "name",
+        selectItems: [
+          { name: "有", delete: 1 },
+          { name: "无", delete: 0 },
+        ],
+        text: "添加",
+        value: "add",
+        select: true,
+        selectItemsValue: "add",
+        selectItemsLabel: "name",
+        selectItems: [
+          { name: "有", add: 1 },
+          { name: "无", add: 0 },
+        ],
+      },
       { text: "备注", value: "remark" },
     ],
     tableData: [],
@@ -302,29 +235,15 @@ export default {
     editedItem: {},
     defaultItem: {
       //必须undefined
-      commodityId: undefined,
-      name: "",
-      barcode: "",
-      category: { name: "" },
-      format: "",
-      unit: { unitName: "" },
-      costPrice: 0,
-      discountRate: 1,
-      inventoryInfo: {
-        quantityUpperLimit: null,
-        quantityLowerLimit: 0,
-      },
-      provide: { name: "" },
-      Status: 1,
-      createDate: new Date(),
-      updateDate: new Date(),
+      roleId: undefined,
+      roleName: "",
       remark: "",
     },
   }),
 
   computed: {
     formTitle() {
-      return this.editedIndex === -1 ? "新商品" : "编辑商品";
+      return this.editedIndex === -1 ? "新权限" : "编辑权限";
     },
     dateCol() {
       if (this.dateColArr.length == 0) return "";
@@ -340,7 +259,7 @@ export default {
           let d = new Date(el[this.dateCol]);
           //!!!
           if (!dateRange || dateRange.length < 2) dateRange = [0, Date.now()];
-          console.log("dateRange el", dateRange, el[this.dateCol], d);
+          console.log("dateRange el", dateRange, el[this.dateCol]);
           if (dateRange[0] <= d && d <= dateRange[1]) {
             return true;
           }
@@ -350,35 +269,16 @@ export default {
           return true;
         }
       };
-      let inventoryFilter = (elCom) => {
-        console.log(elCom, this.filterInfo.morethan);
+      return this.tableDataProcessed.filter(dateRangeFilter).map((el) => {
+        // console.log(el[this.dateCol])
 
-        return (
-          elCom.inventoryInfo.inventoryNum >= this.filterInfo.morethan &&
-          elCom.inventoryInfo.inventoryNum <= this.filterInfo.lessthan
+        // console.log(new Date(el[this.dateCol]).toLocaleDateString());
+        el[this.dateCol] = new Date(el[this.dateCol]).format(
+          "yyyy/MM/dd hh:mm:ss"
         );
-      };
-      return this.tableDataProcessed
-        .filter(dateRangeFilter)
-        .filter((el) => {
-          return inventoryFilter(el);
-        })
-        .map((el) => {
-          // console.log(el[this.dateCol])
-
-          // console.log(new Date(el[this.dateCol]).toLocaleDateString());
-          el[this.dateCol] = new Date(el[this.dateCol]).format(
-            "yyyy/MM/dd hh:mm:ss"
-          );
-          // console.log(el[this.dateCol])
-          return el;
-        })
-        .filter((e) => {
-          console.log(e, e.Status);
-          if (this.showDeleted == 0) return e.Status != -1;
-          if (this.showDeleted == 1) return e.Status == -1;
-          return true;
-        });
+        // console.log(el[this.dateCol])
+        return el;
+      });
     },
     displayTableData() {
       console.log(this.tableDataFiltered, "tableDataFiltered");
@@ -421,7 +321,7 @@ export default {
           if (!e[col]) continue;
           console.log("col", e[col]);
           let d = new Date(e[col]);
-          el[col] = new Date(d).format("yyyy/MM/dd hh:mm:ss");
+          e[col] = new Date(d).format("yyyy/MM/dd hh:mm:ss");
           console.log("col", e[col]);
           // e[col].setHours(d.getHours())
         }
@@ -437,21 +337,54 @@ export default {
     dialogDelete(val) {
       val || this.closeDelete();
     },
-    editedItem: {
+    "editedItem.roleId": {
       handler(val, valOld) {
         console.log("input", this.editedItem);
-        if (!val.discountRate || val.discountRate == "")
-          this.editedItem.discountRate = 1;
-        console.log(this.editedItem);
+        let keysAjax = ["roleName", "roleLevel"];
+        this.$http
+          .request({
+            method: "get",
+            url: "/user/role/findRoleByPage",
+            params: { findInfo: { roleId: this.editedItem.roleId } },
+          })
+          .then((res) => {
+            if (this.$http.hasError(res)) {
+              this.editedItem.roleName = "权限不存在！";
+              throw new Error("权限不存在！");
+            }
+            if (res.data.result.length > 0) {
+              Object.assign(this.editedItem, { role: res.data.result[0] });
+
+              console.log("has", this.editedItem);
+            } else {
+              for (let key of keysAjax) {
+                this.editedItem[key] = this.defaultItem[key];
+              }
+            }
+            return;
+          })
+          .catch((e) => {
+            let msg = e.message;
+            console.log(e);
+            this.$message.error(msg);
+          });
+        // this.editedItem.roleLevel = console.log(this.editedItem);
       },
       deep: true,
     },
   },
   mounted() {
+
+    this.$http.validateRole(
+      this.ROLE_LEVEL,
+      sessionStorage.getItem("roleLevel")
+    ) || this.$message.error("权限不足！！！"),
+      this.$router.push("/");
     this.mountSelectItems();
   },
   created() {
     this.initialize();
+    this.editedItem = Object.assign({}, this.defaultItem);
     for (let i in this.fields) {
       let field = this.fields[i];
       if (!field.groupable) this.fields[i].groupable = false;
@@ -472,26 +405,7 @@ export default {
       let self = this;
       this.headers = [];
       Object.assign(this.headers, this.fields);
-            //单组件权限------------------
-      for (let i in this.actions) {
-        let a = this.actions[i];
-        this.$http
-          .request({
-            method: "get",
-            url: "/user/role/findRoleByPage",
-            params: {
-              findInfo: `where roleId=${sessionStorage.roleId} AND ${a}=1`,
-            },
-          })
-          .then((res) => {
-            if (this.$http.hasError(res)) {
-              this.$message.error(this.$http.getOneError(res).message);
-            } else if (res.data.result.length == 0) {
-              self.actions.splice(i);
-            }
-          });
-      }
-      if (this.actions != null || this.actions.length > 0) {
+      if (this.actions != null) {
         this.headers.push({
           text: "操作",
           value: "actions",
@@ -502,14 +416,16 @@ export default {
       this.$http
         .request({
           method: "GET",
-          url: "/commodity/findCommodityByPage",
+          url: "/user/role/findRoleByPage",
           params: {},
         })
         .then((res) => {
           if (this.$http.hasError(res)) {
             this.$message.error("数据获取失败！请检查网络状态！");
           }
+          console.log(res.data.result, "result");
           self.tableData = res.data.result;
+          console.log(self.tableDataFiltered, "tableDataFiltered");
         })
         .catch((e) => {
           this.$message.error("数据获取失败！请检查网络状态！");
@@ -593,12 +509,12 @@ export default {
       this.$http
         .request({
           method: "delete",
-          url: "/commodity/deleteCommodityById",
-          params: { commodityId: item.commodityId },
+          url: "/role/deleteRoleById",
+          params: { roleId: item.roleId },
         })
         .then((res) => {
           if (this.$http.hasError(res)) {
-            this.$message.error("删除失败！该商品不存在或无法删除！");
+            this.$message.error("删除失败！该权限不存在或无法删除！");
           } else {
             this.$message.success("删除成功！");
           }
@@ -609,27 +525,25 @@ export default {
       // for(let f of this.fields){
       //   if(f.value.includes("."))item[f.value.split(".")[0]]=undefined;
       // }
-      item.unit = undefined;
-      item.category = undefined;
-      item.provide = undefined;
       // item.inventoryInfo=undefined;
       try {
-        let res = await this.$http.post("/commodity/saveCommodity", {
-          commodity: item,
+        let res = await this.$http.post("/user/role/saveRole", {
+          role: item,
         });
         if (this.$http.hasError(res)) {
           let msg = this.$http.getOneError(res).message;
+          console.log(msg, "msg");
           if (msg.includes("Duplicate")) {
             msg = msg.split(" ")[3] + "重复！";
           }
-          throw new Error("商品" + msg + "商品保存失败！");
+          throw new Error("权限" + msg + "权限保存失败！");
         } else {
-          if (!item.commodityId) {
-            item.commodityId = res.data.result.commodityId;
-            this.$message.success("商品添加成功！");
+          if (!item.roleId) {
+            item.roleId = res.data.result.roleId;
+            this.$message.success("权限添加成功！");
           } else {
             this.initialize();
-            this.$message.success("商品保存成功！");
+            this.$message.success("权限保存成功！");
           }
         }
       } catch (e) {
@@ -660,32 +574,15 @@ export default {
       }
       this.close();
     },
-    getStatusColor(nowNum, lowLim, upLim, Status) {
-      if (!lowLim) lowLim = 0;
-      let upLim0 = upLim;
-      if (!upLim) upLim = 10000000;
-      if (Status == -1) return "purple";
-      if (nowNum < lowLim) return "orange";
-      else if (upLim0 && nowNum - lowLim < 0.1 * (upLim - lowLim))
-        return "gray";
-      //大于90%则接近上限，小于0.1售空
-      else if (upLim - nowNum < 0.1 * upLim) return "red";
+    getStatusColor(Status) {
+      if (Status == -1) return "red";
       else return "green";
     },
-    getStatusName(nowNum, lowLim, upLim, Status) {
-      if (!lowLim) lowLim = 0;
-      let upLim0 = upLim;
-      if (!upLim) upLim = 10000000;
+    getStatusName(Status) {
       let ans = "";
       console.log(Status);
-      if (Status == -1) ans += "已删除,";
-      else if (nowNum < lowLim * 1.1) ans += "将要售空,";
-      else if (upLim0 && nowNum - lowLim < 0.1 * (upLim - lowLim))
-        ans += "缺货,";
-      //大于90%则接近上限，小于0.1售空
-      else if (upLim - nowNum < 0.1 * upLim) ans += "接近爆仓,";
-      else ans += "正常,";
-      ans += Status == -1 ? "下架" : "上架";
+      if (Status == -1) ans += "已禁用";
+      else ans += "正常";
       return ans;
     },
   },

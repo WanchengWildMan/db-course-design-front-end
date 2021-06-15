@@ -11,8 +11,13 @@
               </v-toolbar>
               <v-card-text>
                 <v-form>
-
-                  <v-text-field required prepend-icon="person" v-model="username" label="用户名" type="text"/>
+                  <v-text-field
+                    required
+                    prepend-icon="person"
+                    v-model="username"
+                    label="用户名"
+                    type="text"
+                  />
                   <v-text-field
                     required
                     prepend-icon="lock"
@@ -48,7 +53,7 @@ export default {
     username: "",
     password: "",
     dialog: false,
-    e1: false
+    e1: false,
   }),
   methods: {
     async doLogin() {
@@ -56,19 +61,27 @@ export default {
         this.dialog = true;
         return false;
       }
-      const response = await axios.request({
-        url:
-          "/login", params: {
-          username: this.username,
-          password: this.password
-        }
-      });
-      if (response.status == 403) {
-        this.$message.error(this.errors[0]);
+      try {
+        const res = await this.$http.request({
+          url: "/user/employee/login",
+          params: {
+            username: this.username,
+            password: this.password,
+          },
+        });
+        console.log(res)
+        // sessionStorage.user=.user;
+        console.log("session",sessionStorage)
+        this.$router.push("/");
+        // this.$session.set(user, response.session.user);
+      } catch (e) {
+        console.log(e.message);
+        if(e.message.includes("403"))
+        // if (response.status == 403) {
+          this.$message.error("用户名或密码错误！！！");
+        // }
       }
-      this.$router.push("/");
-      this.$session.set(user, response.session.user);
-    }
-  }
+    },
+  },
 };
 </script>

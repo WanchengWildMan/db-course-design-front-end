@@ -2,6 +2,7 @@
 
 
   <v-data-table
+    ref="myDataTable"
     :headers="headers"
     :search="search"
     :items="displayTableData"
@@ -129,7 +130,7 @@
         mdi-pencil
       </v-icon>
       <v-icon
-        v-if="actions.includes('delete') != undefined"
+        v-if="actions.includes('remove') != undefined"
         small
         @click="deleteItem(item)"
       >
@@ -165,24 +166,24 @@ export default {
   name: "MyDataTable",
   components: {MyDatePicker},
   props: {
-    title: String,
-    fields: Array,
-    defaultItem: Object,
+    title: String,//+++
+    fields: Array,//+++
+    defaultItem: Object,//+++
     dataURL: String,
-    actions: Array,
+    actions: Array,//+++
     tableData: Array,
-    key1: String,
-    key2: String,
-    dateCol: String,
+    key1: String,//+++
+    key2: String,//+++
+    dateCol: String,//+++
     showSelect: Object,
-    readonly: Boolean
+    readonly: Boolean//+++
   },
   data: () => ({
     dialog: false,
     dialogDelete: false,
     search: "",
-    isreadonly: false,
-    selectEnabled: false,
+    isreadonly: false,//+++
+    selectEnabled: false,//---
     editedIndex: -1,
     editedItem: {},
     editedItemPrefix: "editedItem.",
@@ -202,7 +203,7 @@ export default {
           let d = new Date(el[this.dateCol]);
           //!!!
           if (!dateRange || dateRange.length < 2) dateRange = [0, Date.now()];
-          // console.log(dateRange, el[this.dateCol], typeof el[col])
+          console.log("dateRange el", dateRange, el[this.dateCol], d)
           if (dateRange[0] <= d && d <= dateRange[1]) {
             return true;
           }
@@ -216,12 +217,17 @@ export default {
         // console.log(el[this.dateCol])
 
         // console.log(new Date(el[this.dateCol]).toLocaleDateString());
-        el[this.dateCol] = new Date(el[this.dateCol]).format("yyyy-MM-dd hh:mm:ss");
+        el[this.dateCol] = new Date(el[this.dateCol]).format("yyyy/MM/dd hh:mm:ss");
         // console.log(el[this.dateCol])
-        return el
-      });
+        return el;
+      }).filter(e => {
+        console.log(e, e.Status)
+        if (this.showDeleted == 0) return e.Status != -1;
+        if (this.showDeleted == 1) return e.Status == -1;
+        return true;
+      })
     },
-    displayTableData() {
+    displayTableData() {//---
       console.log(this.tableDataFiltered, "tableDataFiltered")
       return this.tableDataFiltered.map((e, i) => {
         let el = {};
@@ -271,7 +277,7 @@ export default {
 
   created() {
     this.initialize();
-    for (let i in this.fields) {
+    for (let i in this.fields) {//---
       let field = this.fields[i];
       if (!field.groupable) this.fields[i].groupable = false;
       if (field.value.toLowerCase().includes("time") || field.value.toLowerCase().includes("date")) {
@@ -289,7 +295,7 @@ export default {
       return res.data.errors && res.data.errors.length > 0;
     },
 
-    initialize() {
+    initialize() {//---
       this.headers = []
       Object.assign(this.headers, this.fields);
       if (this.actions != null) {
@@ -304,7 +310,7 @@ export default {
       this.editedItem = Object.assign({}, this.defaultItem);
 
     },
-    mountSelectItems() {
+    mountSelectItems() {//---
       let self = this;
       for (let i in this.fields) {
         if (this.fields[i].select && !this.fields[i].selectItems) {
@@ -321,7 +327,7 @@ export default {
       }
       console.log(this.fields)
     },
-    editItem(item) {
+    editItem(item) {//---
       let criteria = {};
       criteria[this.key1] = item[this.key1];
       if (this.key2) criteria[this.key2] = item[this.key2];
@@ -333,7 +339,7 @@ export default {
       console.log("editedItem", this.editedItem)
     },
 
-    deleteItem(item) {
+    deleteItem(item) {//---
       let criteria = {};
       criteria[this.key1] = item[this.key1];
       if (this.key2) criteria[this.key2] = item[this.key2];
@@ -344,14 +350,14 @@ export default {
       this.dialogDelete = true;
     },
 
-    deleteItemConfirm() {
+    deleteItemConfirm() {//abstract
       // console.log(this.tableData[this.editedIndex],this.editedIndex.toString())
       this.$emit("itemDeleted", Object.assign({}, this.tableData[this.editedIndex]));
       this.tableData.splice(this.editedIndex, 1);
       this.closeDelete();
     },
 
-    close() {
+    close() {//---
       console.log(this.editedItem)
       this.dialog = false;
       this.$nextTick(() => {
@@ -362,7 +368,7 @@ export default {
 
     },
 
-    closeDelete() {
+    closeDelete() {//---
       this.dialogDelete = false;
       this.$nextTick(() => {
         this.editedItem = Object.assign({}, this.defaultItem);
@@ -370,7 +376,7 @@ export default {
       });
     },
 
-    save(isAdd) {
+    save(isAdd) {//abstract
       console.log(this.editedItem)
       console.log(this)
       this.$emit("itemSaved", this.editedItem)

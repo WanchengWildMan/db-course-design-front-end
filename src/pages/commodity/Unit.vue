@@ -33,7 +33,7 @@ export default {
     showDeleted: false,
     itemKey: "unitId",//!!!
     search: "",
-    actions: ['delete', 'edit'],
+    actions: ["addInto",'remove', 'edit'],
     filterBy: 0,
     dateColArr: [],
     fields: [//!!!
@@ -107,7 +107,7 @@ export default {
         params: {},
 
       }).then(res => {
-        if (this.hasError(res)) {
+        if (this.$http.hasError(res)) {
           this.$message.error('数据获取失败！请检查网络状态！');
         }
         self.tableData = res.data.result;
@@ -123,7 +123,7 @@ export default {
         url: '/commodity/deleteUnitById',
         params: {unitId: item.unitId},
       }).then(res => {
-        if (this.hasError(res)) {
+        if (this.$http.hasError(res)) {
           this.$message.error('删除失败！该商品单位不存在或无法删除！');
         } else {
           this.$message.success('删除成功！');
@@ -133,7 +133,7 @@ export default {
     async saveItem(item) {
       try {
       let res = await this.$http.post("/commodity/saveUnit", {unit: item});//!!!
-        if (this.hasError(res)) {
+        if (this.$http.hasError(res)) {
           this.$message.error("商品单位保存失败！");
         } else {
           if (!item.unitId) {

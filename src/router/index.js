@@ -30,14 +30,16 @@ export default new Router({
         route("/item/specification", '/item/specification/Specification', "Specification"),
         route("/user/statistics", '/item/Statistics', "Statistics"),
         route("/trade/promotion", '/trade/Promotion', "Promotion"),
-        route("/commodity",'/commodity/Commodity',"Commodity"),
-        route("/commodity/category",'/commodity/Category',"Category"),
-        route("/commodity/unit",'/commodity/Unit',"Unit"),
-        route("/trade/billInfo",'/bill/Bill',"Bill"),
-        route("/commodity/inventory",'/commodity/Inventory',"Inventory"),
-        route("/trade/purchase",'/purchase/Purchase',"Purchase"),
-
-
+        route("/commodity/totalview", '/commodity/Commodity', "Commodity"),
+        route("/commodity/category", '/commodity/Category', "Category"),
+        route("/commodity/unit", '/commodity/Unit', "Unit"),
+        route("/commodity/inventory", '/commodity/Inventory', "Inventory"),
+        route("/trade/billInfo", '/bill/Bill', "Bill"),
+        route("/trade/purchase", '/purchase/Purchase', "Purchase"),
+        route("trade/provider", "/purchase/Provider", "Provider"),
+        route("/cashier", '/Cashier', "Cashier"),
+        route("/user/employee", "/user/Employee", "Employee"),
+        route("/user/role", "/user/Role", "Role"),
       ]
     },
 

@@ -34,7 +34,7 @@ export default {
     showDeleted: false,
     key1: "commodityId",//!!!
     search: "",
-    actions: [],
+    actions: ["addInto",],
     filterBy: 0,
     dateColArr: [],
     fields: [//!!!
@@ -143,7 +143,7 @@ export default {
         url: '/inventory/findInventoryByPage',
         params: {notGroup: true},
       }).then(async res => {
-          if (this.hasError(res)) {
+          if (this.$http.hasError(res)) {
             this.$message.error('数据获取失败！请检查网络状态！');
             return;//!!!
           }
@@ -174,7 +174,7 @@ export default {
         url: '/bill/deleteBillByBillId',
         params: {billId: item.billId},
       }).then(res => {
-        if (this.hasError(res)) {
+        if (this.$http.hasError(res)) {
           this.$message.error('删除失败！该库存不存在或无法删除！');
         } else {
           this.$message.success('删除成功！');
@@ -186,7 +186,7 @@ export default {
         //TODO item剔除部分字段
         item.Status = undefined;
         let res = await this.$http.post("/bill/saveOneBillInfo", {billInfo: item});//!!!
-        if (this.hasError(res)) {
+        if (this.$http.hasError(res)) {
           this.$message.error("库存保存失败！");
         } else {
           if (!item.billId) {

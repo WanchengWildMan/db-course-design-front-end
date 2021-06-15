@@ -87,8 +87,8 @@
     </v-toolbar>
     <!--中间内容主体-->
     <v-content>
-      <v-breadcrumbs>
-        <v-icon slot="divider">chevron_right</v-icon>
+      <v-breadcrumbs divider="/">
+        <!-- <v-icon slot="divider">chevron_right</v-icon> -->
         <v-breadcrumbs-item>{{item1}}</v-breadcrumbs-item>
         <v-breadcrumbs-item>{{item2}}</v-breadcrumbs-item>
       </v-breadcrumbs>
@@ -109,7 +109,7 @@
         dark: false,// 是否暗黑主题
         drawer: true,// 左侧导航是否隐藏
         miniVariant: false,// 左侧导航是否收起
-        title: '乐优商城后台管理',// 顶部导航条名称,
+        title: 'XX商店后台管理',// 顶部导航条名称,
         menuMap: {}
       }
     },
