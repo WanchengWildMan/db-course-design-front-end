@@ -4,9 +4,6 @@ const MyComponent = {};
 
 MyComponent.install = function (Vue) {
   Vue.component("vTree", () => import('./tree/Tree'));
-  Vue.component("vCascader", () => import('./cascader/Cascader'));
-  Vue.component("vUpload", () => import('./form/Upload'));
-  Vue.component("vEditor", () => import('./form/Editor'));
   Vue.prototype.$message = m;
   Vue.prototype.$format = function (val) {
     if(typeof val === 'string'){
