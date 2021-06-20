@@ -202,7 +202,7 @@ export default {
       },
 
       {
-        text: "身份证号",
+        text: "联系地址",
         value: "contactAddress",
         cols: 6,
         rules: [(v) => !!v || "必须填写联系地址!"],
@@ -492,7 +492,7 @@ export default {
         .request({
           method: "delete",
           url: "/provide/deleteProvideById",
-          params: { provideId: item.provideId },
+          params: { findInfo: { provideId: item.provideId } },
         })
         .then((res) => {
           if (this.$http.hasError(res)) {

@@ -324,6 +324,8 @@ export default {
 
   computed: {
     formTitle() {
+      if (this.editedIndex === -1)
+        this.editedItem = Object.assign(this.defaultItem);
       return this.editedIndex === -1 ? "新商品" : "编辑商品";
     },
     dateCol() {
@@ -472,15 +474,20 @@ export default {
       let self = this;
       this.headers = [];
       Object.assign(this.headers, this.fields);
-            //单组件权限------------------
+      //单组件权限------------------
       for (let i in this.actions) {
         let a = this.actions[i];
+        console.log("session", sessionStorage);
+
         this.$http
           .request({
             method: "get",
             url: "/user/role/findRoleByPage",
             params: {
-              findInfo: `where roleId=${sessionStorage.roleId} AND ${a}=1`,
+              // findInfo: `where roleId=${sessionStorage.roleId} AND ${a}=1`,
+              findInfo: `where roleId=${
+                JSON.parse(sessionStorage.getItem("user")).roleId
+              } AND ${a}=1`,
             },
           })
           .then((res) => {
@@ -650,6 +657,7 @@ export default {
         Object.assign(this.tableData[this.editedIndex], this.editedItem);
       } else {
         this.editedItem[this.key1] = undefined;
+        console.log("commodityId remove");
         if (this.key2) this.editedItem[this.key2] = undefined;
         console.log(this.editedItem);
         this.$nextTick(() => {
@@ -665,9 +673,8 @@ export default {
       let upLim0 = upLim;
       if (!upLim) upLim = 10000000;
       if (Status == -1) return "purple";
-      if (nowNum < lowLim) return "orange";
-      else if (upLim0 && nowNum - lowLim < 0.1 * (upLim - lowLim))
-        return "gray";
+      if (nowNum < 1.1 * lowLim && nowNum > lowLim) return "orange";
+      else if (nowNum < lowLim) return "gray";
       //大于90%则接近上限，小于0.1售空
       else if (upLim - nowNum < 0.1 * upLim) return "red";
       else return "green";
@@ -679,7 +686,7 @@ export default {
       let ans = "";
       console.log(Status);
       if (Status == -1) ans += "已删除,";
-      else if (nowNum < lowLim * 1.1) ans += "将要售空,";
+      else if (nowNum < lowLim * 1.1&& nowNum > lowLim) ans += "将要售空,";
       else if (upLim0 && nowNum - lowLim < 0.1 * (upLim - lowLim))
         ans += "缺货,";
       //大于90%则接近上限，小于0.1售空

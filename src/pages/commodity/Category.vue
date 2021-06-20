@@ -62,7 +62,13 @@ export default {
         text: "状态",
         value: "Status",
         displayVal: { "-1": "删除", 1: "正常" },
-        readonly: true,
+        selectItemLabel: "name",
+        selectItemValue: "Status",
+        select: true,
+        selectItems: [
+          { name: "删除", Status: -1 },
+          { name: "正常", Status: 1 },
+        ],
       },
     ],
     tableData: [],
@@ -172,6 +178,7 @@ export default {
             this.$message.success("商品类别添加成功！");
           } else {
             this.initialize();
+             this.$message.success("商品类别保存成功！");
           }
         }
       } catch (e) {

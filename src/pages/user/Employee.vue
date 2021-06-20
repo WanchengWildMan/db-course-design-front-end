@@ -327,6 +327,8 @@ export default {
 
   computed: {
     formTitle() {
+      if (this.editedIndex === -1)
+        this.editedItem = Object.assign(this.defaultItem);
       return this.editedIndex === -1 ? "新员工" : "编辑员工";
     },
     dateCol() {
@@ -468,9 +470,9 @@ export default {
   mounted() {
     this.$http.validateRole(
       this.ROLE_LEVEL,
-      sessionStorage.getItem("roleLevel")
-    ) || this.$message.error("权限不足！！！"),
-      this.$router.push("/");
+      JSON.parse(sessionStorage.getItem("user")).role.roleLevel
+    ) || (this.$message.error("权限不足！！！"),
+      this.$router.push("/"));
     this.mountSelectItems();
   },
   created() {
@@ -496,7 +498,7 @@ export default {
       let self = this;
       this.headers = [];
       Object.assign(this.headers, this.fields);
-            //单组件权限------------------
+      //单组件权限------------------
       for (let i in this.actions) {
         let a = this.actions[i];
         this.$http
@@ -504,7 +506,9 @@ export default {
             method: "get",
             url: "/user/role/findRoleByPage",
             params: {
-              findInfo: `where roleId=${sessionStorage.roleId} AND ${a}=1`,
+              findInfo: `where roleId=${
+                JSON.parse(sessionStorage.getItem("user")).roleId
+              } AND ${a}=1`,
             },
           })
           .then((res) => {
@@ -619,7 +623,7 @@ export default {
       this.$http
         .request({
           method: "delete",
-          url: "/employee/deleteEmployeeById",
+          url: "/user/employee/deleteEmployeeById",
           params: { employeeId: item.employeeId },
         })
         .then((res) => {

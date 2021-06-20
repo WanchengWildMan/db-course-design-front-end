@@ -5,24 +5,23 @@
 <script>
 export default {
   name: "App",
-  data: {
-    username: null,
-  },
-  mounted: function () {
-    sessionStorage.setItem(
-      "employeeId",
-      "53851eea-148d-455f-b26f-0da2f14d6de9"
-    );
-    sessionStorage.setItem("roleId", "1");
-    sessionStorage.setItem("roleLevel", "1");
-    console.log(sessionStorage,"sessionStorge")
-    // if (!sessionStorage.user) {
-    //   this.$router.push({
-    //     name: "Login",
-    //   });
-    // } else {
-    //   this.username = this.$session.user.username;
-    // }
+  data:()=>( {
+     username: null,
+  }),
+  mounted()  {
+    // sessionStorage.setItem(
+    //   "employeeId",
+    //   "53851eea-148d-455f-b26f-0da2f14d6de9"
+    // );
+    // console.log(sessionStorage, "sessionStorage");
+    console.log(sessionStorage,"sessionStorage");
+    if (!JSON.parse(sessionStorage.getItem("user"))) {
+      this.$router.push({
+        name: "Login",
+      });
+    } else {
+      this.username = JSON.parse(sessionStorage.getItem("user")).name;
+    }
   },
 };
 </script>

@@ -69,15 +69,17 @@ export default {
             password: this.password,
           },
         });
-        console.log(res)
-        // sessionStorage.user=.user;
-        console.log("session",sessionStorage)
+        console.log(res);
+        // JSON.parse(sessionStorage.getItem('user'))=.user;
+        // sessionStorage.setItem("employeeId", res.session);
+        console.log("session", sessionStorage);
         this.$router.push("/");
-        // this.$session.set(user, response.session.user);
+        sessionStorage.setItem("user", JSON.stringify(res.data.result.user));
+        console.log(sessionStorage);
       } catch (e) {
         console.log(e.message);
-        if(e.message.includes("403"))
-        // if (response.status == 403) {
+        if (e.message.includes("403"))
+          // if (response.status == 403) {
           this.$message.error("用户名或密码错误！！！");
         // }
       }

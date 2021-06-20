@@ -248,6 +248,8 @@ export default {
       {
         text: "顾客编号或姓名",
         value: "billUser.customerId",
+        groupable: true,
+
       },
       {
         text: "商品名称",
@@ -257,12 +259,16 @@ export default {
       {
         text: "商品编号",
         value: "commodityId",
+        groupable: true,
+
         cols: 12,
       },
       {
         text: "商品条形码",
         value: "commodity.barcode",
         readonly: true,
+        groupable: true,
+
       },
       {
         text: "商品数量",
@@ -272,6 +278,7 @@ export default {
         text: "商品类别",
         value: "category.name",
         readonly: true,
+        groupable: true,
       },
       {
         text: "总金额",
@@ -410,7 +417,6 @@ export default {
       this.headers = [];
       Object.assign(this.headers, this.fields);
       let self = this;
-      console.log(sessionStorage);
       //单组件权限------------------
       for (let i in this.actions) {
         let a = this.actions[i];
@@ -419,7 +425,9 @@ export default {
             method: "get",
             url: "/user/role/findRoleByPage",
             params: {
-              findInfo: `where roleId=${sessionStorage.roleId} AND ${a}=1`,
+              // findInfo: `where roleId=${sessionStorage.roleId} AND ${a}=1`,
+              findInfo: `where roleId=${JSON.parse(sessionStorage.getItem('user')).roleId} AND ${a}=1`,
+
             },
           })
           .then((res) => {
@@ -527,7 +535,7 @@ export default {
         .request({
           method: "delete",
           url: "/bill/deleteBillByBillId",
-          params: { billId: item.billId },
+          params: { billId: item.billId, commodityId: item.commodityId },
         })
         .then((res) => {
           if (this.$http.hasError(res)) {

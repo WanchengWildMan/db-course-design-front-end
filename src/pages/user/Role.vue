@@ -201,31 +201,33 @@ export default {
         text: "修改",
         value: "edit",
         select: true,
-        selectItemsValue: "edit",
-        selectItemsLabel: "name",
+        selectItemValue: "edit",
+        selectItemLabel: "name",
         selectItems: [
-          { name: "有", edit: 1 },
-          { name: "无", edit: 0 },
+          { name: "有", edit: true },
+          { name: "无", edit: false },
         ],
       },
       {
         text: "删除",
         value: "remove",
         select: true,
-        selectItemsValue: "remove",
-        selectItemsLabel: "name",
+        selectItemValue: "remove",
+        selectItemLabel: "name",
         selectItems: [
-          { name: "有", delete: 1 },
-          { name: "无", delete: 0 },
+          { name: "有", remove: true },
+          { name: "无", remove: false },
         ],
+      },
+      {
         text: "添加",
-        value: "add",
+        value: "addInto",
         select: true,
-        selectItemsValue: "add",
-        selectItemsLabel: "name",
+        selectItemValue: "addInto",
+        selectItemLabel: "name",
         selectItems: [
-          { name: "有", add: 1 },
-          { name: "无", add: 0 },
+          { name: "有", addInto: true },
+          { name: "无", addInto: false },
         ],
       },
       { text: "备注", value: "remark" },
@@ -374,12 +376,10 @@ export default {
     },
   },
   mounted() {
-
     this.$http.validateRole(
       this.ROLE_LEVEL,
-      sessionStorage.getItem("roleLevel")
-    ) || this.$message.error("权限不足！！！"),
-      this.$router.push("/");
+      JSON.parse(sessionStorage.getItem("user")).role.roleLevel
+    ) || (this.$message.error("权限不足！！！"), this.$router.push("/"));
     this.mountSelectItems();
   },
   created() {

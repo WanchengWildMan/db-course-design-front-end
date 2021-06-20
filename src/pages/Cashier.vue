@@ -435,6 +435,10 @@ export default {
     returnPrice() {
       return this.actualPaid - this.sumTotalMoney;
     },
+    user() {
+      console.log(sessionStorage, "sessionStorage");
+      return JSON.parse(sessionStorage.getItem("user"));
+    },
   },
 
   watch: {
@@ -644,8 +648,8 @@ export default {
       bill.customerId = this.customerId;
       //TODO session!!!
 
-      console.log("user", sessionStorage.employeeId, sessionStorage);
-      bill.employeeId = sessionStorage.employeeId;
+      console.log("user", this.user.employeeId);
+      bill.employeeId = this.user.employeeId;
       let res = await this.$http.request({
         method: "post",
         url: "/bill/saveBill",

@@ -17,7 +17,7 @@ var menus = [
       { title: "供应商管理", path: "/provider" }
     ]
   },
-
+  
   {
     action: "attach_money",
     title: "销售管理",

@@ -210,6 +210,7 @@ export default {
     showDeleted: false,
     selectEnabled: false,
     headers: [],
+    key1: "purchaseId",
     isreadonly: false, //+++
     itemKey: "purchaseId",
     search: "",
@@ -248,11 +249,11 @@ export default {
         value: "commodityId",
         cols: 12,
       },
-            {
+      {
         text: "商品名称",
         align: "start",
         value: "commodity.name",
-        readonly:true,
+        readonly: true,
       },
       {
         text: "进货数量",
@@ -340,6 +341,14 @@ export default {
           // e.quantityLowerLimit = e.quantityLowerLimit == 0 ? '无' : e.quantityLowerLimit;
           // e.quantityUpperLimit = e.quantityUpperLimit ? e.quantityUpperLimit : '无';
           // console.log(e.Status)
+          for (let col of this.dateColArr) {
+            if (!e[col]) continue;
+            console.log("col", e[col]);
+            let d = new Date(e[col]);
+            el[col] = new Date(d).format("yyyy/MM/dd hh:mm:ss");
+            console.log("col", e[col]);
+            // e[col].setHours(d.getHours())
+          }
           return e;
         })
         .filter((e) => {
@@ -374,14 +383,16 @@ export default {
           elCom.inventoryInfo.inventoryNum <= this.filterInfo.lessthan
         );
       };
-      return this.tableData
+      return this.tableDataProcessed
         .filter(dateRangeFilter)
         .filter((el) => {
           return inventoryFilter(el.commodity);
         })
         .map((el) => {
           // console.log(el[this.dateCol])
-
+          el[this.dateCol] = new Date(el[this.dateCol]).format(
+            "yyyy/MM/dd hh:mm:ss"
+          );
           // console.log(new Date(el[this.dateCol]).toLocaleDateString());
           // el[this.dateCol] = new Date(el[this.dateCol]).format("yyyy-MM-dd hh:mm:ss");
           // console.log(el[this.dateCol])
@@ -451,6 +462,27 @@ export default {
       let self = this;
       this.headers = [];
       Object.assign(this.headers, this.fields);
+       //单组件权限------------------
+      for (let i in this.actions) {
+        let a = this.actions[i];
+        this.$http
+          .request({
+            method: "get",
+            url: "/user/role/findRoleByPage",
+            params: {
+              // findInfo: `where roleId=${sessionStorage.roleId} AND ${a}=1`,
+              findInfo: `where roleId=${JSON.parse(sessionStorage.getItem('user')).roleId} AND ${a}=1`,
+
+            },
+          })
+          .then((res) => {
+            if (this.$http.hasError(res)) {
+              this.$message.error(this.$http.getOneError(res).message);
+            } else if (res.data.result.length == 0) {
+              self.actions.splice(i);
+            }
+          });
+      }
       if (this.actions != null) {
         this.headers.push({
           text: "操作",
@@ -459,6 +491,7 @@ export default {
           align: "start",
         });
       }
+
       this.$http
         .request({
           method: "GET",
@@ -544,6 +577,7 @@ export default {
           (!this.key2 || e[this.key2] == criteria[this.key2])
         );
       });
+      console.log(this.editedIndex);
       this.editedItem = Object.assign({}, this.tableData[this.editedIndex]);
       this.dialog = true;
       console.log("editedItem", this.editedItem);
@@ -575,8 +609,9 @@ export default {
       }
       console.log(item);
       try {
-        let res = await this.$http.post("/purchase/saveOnePurchase", {
-          purchaseInfo: item,
+        //saveOnePurchase废弃 TODO，没有事务和判断添加和修改
+        let res = await this.$http.post("/purchase/savePurchase", {
+          purchaseInfos: [item],
         });
         if (this.$http.hasError(res)) {
           throw new Error("进货单保存失败！");

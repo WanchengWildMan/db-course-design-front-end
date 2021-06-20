@@ -196,10 +196,10 @@ export default {
     isreadonly: false,
     selectEnabled: false,
     editedIndex: -1,
-    showStatus:2,
+    showStatus: 2,
     editedItem: {},
     headers: [],
-    actions: ["addInto","edit"],
+    actions: ["addInto", "edit"],
     tableData: [],
     fields: [
       //!!!
@@ -231,12 +231,10 @@ export default {
       {
         text: "库存上限",
         value: "quantityUpperLimit",
-        readonly: true,
       },
       {
         text: "库存下限",
         value: "quantityLowerLimit",
-        readonly: true,
       },
       {
         text: "入库时间",
@@ -317,7 +315,7 @@ export default {
           return el;
         })
         .filter((e) => {
-          console.log(this.showStatus,e, e.Status, e.Status === "正常");
+          console.log(this.showStatus, e, e.Status, e.Status === "正常");
           if (this.showStatus == 2) return true;
           if (this.showStatus == 1) return e.Status === "正常";
           if (this.showStatus == 0) return e.Status === "缺货";
@@ -497,7 +495,12 @@ export default {
     async saveItem(item) {
       try {
         //TODO item剔除部分字段
-        const updateFields = ["commodityId", "inventoryNum"];
+        const updateFields = [
+          "commodityId",
+          "inventoryNum",
+          "quantityLowerLimit",
+          "quantityUpperLimit",
+        ];
         for (let k of Object.keys(item)) {
           if (!updateFields.includes(k)) {
             item[k] = undefined;
@@ -520,7 +523,7 @@ export default {
         }
       } catch (e) {
         console.log(e);
-        this.$message.error("库存保存失败！请检查网络连接");
+        this.$message.error(`库存保存失败！${e.message}`);
       }
     },
     getStatusColor(nowNum, lowLim, upLim) {
@@ -528,9 +531,8 @@ export default {
       let upLim0 = upLim;
       if (!upLim) upLim = 10000000;
 
-      if (nowNum < lowLim) return "orange";
-      else if (upLim0 && nowNum - lowLim < 0.1 * (upLim - lowLim))
-        return "gray";
+      if (nowNum < lowLim) return "gray";
+      else if (nowNum < 1.1 * lowLim && nowNum > lowLim) return "orange";
       //大于90%则接近上限，小于0.1售空
       else if (upLim - nowNum < 0.1 * upLim) return "red";
       else return "green";
@@ -539,9 +541,8 @@ export default {
       if (!lowLim) lowLim = 0;
       let upLim0 = upLim;
       if (!upLim) upLim = 10000000;
-      if (nowNum < lowLim * 1.1) return "将要售空";
-      else if (upLim0 && nowNum - lowLim < 0.1 * (upLim - lowLim))
-        return "缺货";
+      if (nowNum < lowLim) return "缺货";
+      else if (nowNum < 1.1 * lowLim && nowNum > lowLim) return "将要售空";
       //大于90%则接近上限，小于0.1售空
       else if (upLim - nowNum < 0.1 * upLim) return "接近爆仓";
       else return "正常";
