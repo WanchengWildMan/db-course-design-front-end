@@ -1,6 +1,3 @@
-# leyou-manage-web
-
-> A Vue.js project
 
 ## Build Setup
 
